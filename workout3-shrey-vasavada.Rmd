@@ -1,0 +1,290 @@
+---
+title: "Stat 133 Workout 3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+#library(xm12)
+library(rvest)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+```
+
+### 1) Extract simple information of the authors
+
+```{r}
+scholar1 <- "https://scholar.google.com/citations?user="
+
+# For Richard Thaler
+author1 <- "Tvzd5GgAAAAJ"
+author1_url <- paste0(scholar1, author1)
+download.file(author1_url, 'richard_thaler.html')
+#richard_thaler <- read_html('richard_thaler.html')
+richard_thaler <- read_html('richard_thaler_Scholar.html')
+
+#For Angus Deaton
+author2 <- "rvFjcQIAAAAJ"
+author2_url <- paste0(scholar1, author2)
+download.file(author2_url, 'angus_deaton.html')
+angus_deaton <- read_html('angus_deaton.html')
+```
+
+Extracting "Richard Thaler":
+
+```{r}
+title_RT_html <- html_nodes(richard_thaler, "div#gsc_prf_in")
+title_RT <- html_text(title_RT_html)
+title_RT
+```
+
+Extracting "Angus Deaton":
+
+```{r}
+title_AD_html <- html_nodes(angus_deaton, "div#gsc_prf_in")
+title_AD <- html_text(title_AD_html)
+title_AD
+```
+
+Extracting Thaler's associated institution:
+
+```{r}
+inst_RT_html <- html_nodes(richard_thaler, "div.gsc_prf_il")
+inst_RT <- html_text(inst_RT_html)[1]
+inst_RT
+```
+
+Extracting Deaton's associated institution:
+
+```{r}
+inst_AD_html <- html_nodes(angus_deaton, "div.gsc_prf_il")
+inst_AD <- html_text(inst_AD_html)[1]
+inst_AD
+```
+
+### Question 2 in clean-data-script.R
+
+### 3) Practice with Regular Expressions
+
+a) For the two scholars, how many of their paper titles begin with a word that starts with a vowel, respectively?
+```{r}
+# Counting for Thaler
+thaler_info <- richard_thaler %>% html_nodes(xpath ='//*[@id="gsc_a_b"]') %>% 
+  html_nodes(xpath ='tr') %>% html_nodes(xpath ='td') 
+step1 = sapply(html_children(thaler_info), html_text)
+step1 = step1[step1 != '*']
+
+thaler_df = data.frame(paperName = step1[seq(1, length(step1), 5)],
+                        researcher = step1[seq(2, length(step1), 5)],
+                        journal = step1[seq(3, length(step1), 5)],
+                        citations = step1[seq(4, length(step1), 5)],
+                        year = step1[seq(5, length(step1), 5)])
+thalerCount <- 0
+titles <- thaler_df$paperName
+vowels <- c('A','E','I','O','U')
+for (i in titles) {
+  if (substr(i, 1, 1) == vowels[1]) {
+    thalerCount <- thalerCount + 1
+  } else if (substr(i, 1, 1) == vowels[2]) {
+    thalerCount <- thalerCount + 1
+  } else if (substr(i, 1, 1) == vowels[3]) {
+    thalerCount <- thalerCount + 1
+  } else if (substr(i, 1, 1) == vowels[4]) {
+    thalerCount <- thalerCount + 1
+  } else if (substr(i, 1, 1) == vowels[5]) {
+    thalerCount <- thalerCount + 1
+  }
+}
+
+# Counting for Deaton
+deaton_info <- angus_deaton %>% html_nodes(xpath ='//*[@id="gsc_a_b"]') %>% 
+  html_nodes(xpath ='tr') %>% html_nodes(xpath ='td') 
+step2 = sapply(html_children(deaton_info), html_text)
+step2 = step2[step2 != '*']
+
+deaton_df = data.frame(paperName = step2[seq(1, length(step2), 5)],
+                       researcher = step2[seq(2, length(step2), 5)],
+                       journal = step2[seq(3, length(step2), 5)],
+                       citations = step2[seq(4, length(step2), 5)],
+                       year = step2[seq(5, length(step2), 5)])
+
+deatonCount <- 0
+for (i in deaton_df$paperName) {
+  if (substr(i, 1, 1) == vowels[1]) {
+    deatonCount <- deatonCount + 1
+  } else if (substr(i, 1, 1) == vowels[2]) {
+    deatonCount <- deatonCount + 1
+  } else if (substr(i, 1, 1) == vowels[3]) {
+    deatonCount <- deatonCount + 1
+  } else if (substr(i, 1, 1) == vowels[4]) {
+    deatonCount <- deatonCount + 1
+  } else if (substr(i, 1, 1) == vowels[5]) {
+    deatonCount <- deatonCount + 1
+  }
+}
+
+# Computing total count
+c(thalerCount, deatonCount)
+```
+
+b) For the two scholars, how many of their paper titles end with "s" respectively?
+
+```{r}
+thalerCountS <- 0
+for (i in thaler_df$paperName) {
+  if (substr(i, nchar(i), nchar(i)) == 's') {
+    thalerCountS <- thalerCountS + 1
+  } else if (substr(i, nchar(i), nchar(1)) == 's') {
+    thalerCountS <- thalerCountS + 1
+  } else if (substr(i, nchar(i), nchar(1)) == 's') {
+    thalerCountS <- thalerCountS + 1
+  } else if (substr(i, nchar(i), nchar(1)) == 's') {
+    thalerCountS <- thalerCountS + 1
+  } else if (substr(i, nchar(i), nchar(1)) == 's') {
+    thalerCountS <- thalerCountS + 1
+  }
+}
+
+# Counting for Deaton
+deatonCountS <- 0
+for (i in deaton_df$paperName) {
+  if (substr(i, nchar(i), nchar(i)) == 's') {
+    deatonCountS <- deatonCountS + 1
+  } else if (substr(i, nchar(i), nchar(i)) == 's') {
+    deatonCountS <- deatonCountS + 1
+  } else if (substr(i, nchar(i), nchar(i)) == 's') {
+    deatonCountS <- deatonCountS + 1
+  } else if (substr(i, nchar(i), nchar(i)) == 's') {
+    deatonCountS <- deatonCountS + 1
+  } else if (substr(i, nchar(i), nchar(i)) == 's') {
+    deatonCountS <- deatonCountS + 1
+  }
+}
+
+# Computing total count
+c(thalerCountS, deatonCountS)
+```
+
+c) For the two scholars, find the longest title, respectively ("longest" in terms of number of characters).
+
+```{r}
+# Finding Thaler's longest title
+ncharsThaler <- c()
+for (i in thaler_df$paperName) {
+  ncharThaler <- nchar(i)
+  ncharsThaler <- c(ncharsThaler, ncharThaler)
+}
+thaler_df %>%
+  mutate(num_chars = ncharsThaler) %>%
+  filter(num_chars == max(num_chars)) %>%
+  select(paperName)
+```
+
+```{r}
+# Finding Deaton's longest title
+ncharsDeaton <- c()
+for (i in deaton_df$paperName) {
+  ncharDeaton <- nchar(i)
+  ncharsDeaton <- c(ncharsDeaton, ncharDeaton)
+}
+deaton_df %>%
+  mutate(num_chars = ncharsDeaton) %>%
+  filter(num_chars == max(num_chars)) %>%
+  select(paperName)
+```
+
+d) For the two scholars, calculate the variable "number of punctuation symbols in the their titles". Display summary() statistics of these variables, and the corresponding histograms.
+
+```{r}
+# Calculating for Thaler
+thaler_titles <- thaler_df$paperName
+thaler_periods <- str_count(thaler_titles, '.')
+thaler_commas <- str_count(thaler_titles, ',')
+thaler_apostrophe <- str_count(thaler_titles, "''")
+#thaler_questions <- str_count(thaler_titles, "?")
+thaler_exclaims <- str_count(thaler_titles, "!")
+thaler_hyphens <- str_count(thaler_titles, "-")
+thalerPunc_df <- data.frame(periods = thaler_periods, commas = thaler_commas, apostrophes = thaler_apostrophe, exclamations = thaler_exclaims, hyphens = thaler_hyphens)
+summary(thalerPunc_df)
+```
+
+I will now plot some histograms of the various (relevant) data.
+
+```{r}
+ggplot(thalerPunc_df, aes(x = periods)) + geom_histogram(color = 'black')
+```
+
+```{r}
+ggplot(thalerPunc_df, aes(x = commas)) + geom_histogram(color = 'black', fill = 'green')
+```
+
+I will now repeat for Deaton.
+
+```{r}
+# Calculating for Deaton
+deaton_titles <- deaton_df$paperName
+deaton_periods <- str_count(deaton_titles, '.')
+deaton_commas <- str_count(deaton_titles, ',')
+deaton_apostrophe <- str_count(deaton_titles, "''")
+#thaler_questions <- str_count(thaler_titles, "?")
+deaton_exclaims <- str_count(deaton_titles, "!")
+deaton_hyphens <- str_count(deaton_titles, "-")
+deatonPunc_df <- data.frame(periods = deaton_periods, commas = deaton_commas, apostrophes = deaton_apostrophe, exclamations = deaton_exclaims, hyphens = deaton_hyphens)
+summary(deatonPunc_df)
+```
+
+```{r}
+ggplot(deatonPunc_df, aes(x = periods)) + geom_histogram(color = 'black', fill = 'green')
+```
+
+```{r}
+ggplot(thalerPunc_df, aes(x = commas)) + geom_histogram(color = 'black', fill = 'red')
+```
+
+e) Remove stop words ("the", "a", "an", "and", "in", "if", "but"), numbers and punctuations from the titles.
+
+```{r}
+# For Thaler
+words <- c("the", "a", "an", "and", "in", "if", "but", " the ")
+thalerRemoved <- str_remove(thaler_titles, words) 
+stored_thaler <- c()
+for (string in thalerRemoved) {
+  splitted <- strsplit(string, " ")
+  stored_thaler <- c(stored_thaler, splitted)
+}
+#table(stored_thaler)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
